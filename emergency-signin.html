@@ -183,6 +183,35 @@
                                 </div>
                             </div>
 
+                            <!-- User Filter Section -->
+                            <div class="form-section">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-funnel"></i>
+                                    User Filter
+                                </label>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="user-filter" id="filter-all" value="all" checked>
+                                            <label class="form-check-label" for="filter-all">
+                                                <strong>All Active Users</strong>
+                                                <small class="d-block text-muted">Include all active department members</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="user-filter" id="filter-officers" value="officers">
+                                            <label class="form-check-label" for="filter-officers">
+                                                <strong>Officers Only</strong>
+                                                <small class="d-block text-muted">Lieutenant, Captain, Assistant Chief, Deputy Chief, Chief</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Generate Button -->
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg" id="generate-btn" disabled>
@@ -217,46 +246,7 @@
         </div>
 
         <!-- Additional Information -->
-        <div class="row mt-5">
-            <div class="col-lg-8 offset-lg-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="bi bi-info-circle"></i>
-                            How It Works
-                        </h5>
-                        <div class="row">
-                            <div class="col-md-3 text-center mb-3">
-                                <i class="bi bi-key display-4 text-primary mb-2"></i>
-                                <h6>1. Enter Token</h6>
-                                <p class="small text-muted">Provide your Emergency Networking API token</p>
-                            </div>
-                            <div class="col-md-3 text-center mb-3">
-                                <i class="bi bi-cloud-download display-4 text-primary mb-2"></i>
-                                <h6>2. Fetch Data</h6>
-                                <p class="small text-muted">Retrieves active users directly from API</p>
-                            </div>
-                            <div class="col-md-3 text-center mb-3">
-                                <i class="bi bi-ui-checks display-4 text-primary mb-2"></i>
-                                <h6>3. Enter Details</h6>
-                                <p class="small text-muted">Fill in training topic and lead trainer information</p>
-                            </div>
-                            <div class="col-md-3 text-center mb-3">
-                                <i class="bi bi-file-earmark-pdf display-4 text-primary mb-2"></i>
-                                <h6>4. Generate PDF</h6>
-                                <p class="small text-muted">Creates and downloads PDF in your browser</p>
-                            </div>
-                        </div>
-                        
-                        <div class="alert alert-success mt-3">
-                            <i class="bi bi-check-circle"></i>
-                            <strong>Standalone Version:</strong> This page works entirely in your browser - no server installation required! 
-                            Just save this HTML file and open it locally or host it on any web server.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
 
     <!-- Footer -->
@@ -458,12 +448,13 @@
                     const topic = document.getElementById('topic').value.trim();
                     const trainerSelect = document.getElementById('trainer-select').value;
                     const trainerCustom = document.getElementById('trainer-custom').value.trim();
+                    const userFilter = document.querySelector('input[name="user-filter"]:checked').value;
                     
                     // Determine trainer (custom takes precedence)
                     const trainer = trainerCustom || trainerSelect || '';
                     
                     // Generate PDF
-                    await generatePDF(usersData, topic, trainer);
+                    await generatePDF(usersData, topic, trainer, userFilter);
                     
                 } catch (error) {
                     showMessage('danger', `Error generating PDF: ${error.message}`);
@@ -475,18 +466,27 @@
             });
         }
 
-        async function generatePDF(users, topic, trainer) {
+        async function generatePDF(users, topic, trainer, userFilter = 'all') {
             const { jsPDF } = window.jspdf;
             
             // Filter for valid active users (same logic as dropdown)
             const activeUsers = users.filter(user => user.active === 1);
-            const validUsers = activeUsers.filter(user => {
+            let validUsers = activeUsers.filter(user => {
                 const personnelId = user.personnel_id;
                 const rank = user.rank;
                 const hasPersonnelId = personnelId && personnelId.toString().trim() !== '';
                 const hasRank = rank && rank.toString().trim() !== '';
                 return hasPersonnelId || hasRank;
             });
+            
+            // Apply officer filter if selected
+            if (userFilter === 'officers') {
+                const officerRanks = ['Lieutenant', 'Captain', 'Assistant Chief', 'Deputy Chief', 'Chief'];
+                validUsers = validUsers.filter(user => {
+                    const rank = user.rank ? user.rank.toString().trim() : '';
+                    return officerRanks.includes(rank);
+                });
+            }
             
             // Sort users alphabetically
             const sortedUsers = validUsers.sort((a, b) => {
@@ -614,12 +614,22 @@
                 }
             });
             
+            // Calculate statistics based on filtering
+            const baseValidUsers = activeUsers.filter(user => {
+                const personnelId = user.personnel_id;
+                const rank = user.rank;
+                const hasPersonnelId = personnelId && personnelId.toString().trim() !== '';
+                const hasRank = rank && rank.toString().trim() !== '';
+                return hasPersonnelId || hasRank;
+            });
+            
             // Show statistics
             showStats({
                 total_users: users.length,
                 active_users: activeUsers.length,
                 valid_users: validUsers.length,
-                filtered_out: activeUsers.length - validUsers.length
+                filtered_out: baseValidUsers.length - validUsers.length,
+                filter_type: userFilter
             });
             
             // Open PDF in browser instead of downloading
@@ -659,6 +669,8 @@
             const statsCard = document.getElementById('stats-card');
             const statsContent = document.getElementById('stats-content');
             
+            const filterLabel = stats.filter_type === 'officers' ? 'Officers Only' : 'All Users';
+            
             statsContent.innerHTML = `
                 <div class="row text-center">
                     <div class="col-3">
@@ -671,7 +683,7 @@
                     </div>
                     <div class="col-3">
                         <div class="fw-bold fs-4 text-info">${stats.valid_users}</div>
-                        <small class="text-muted">Included</small>
+                        <small class="text-muted">Included (${filterLabel})</small>
                     </div>
                     <div class="col-3">
                         <div class="fw-bold fs-4 text-warning">${stats.filtered_out}</div>
