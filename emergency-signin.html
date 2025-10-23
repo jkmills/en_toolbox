@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Render Deployment Version -->
+    <title>Emergency Networking Training Sign-In Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- jsPDF and jsPDF-AutoTable for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .btn-primary {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-primary:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-error { background-color: #dc3545; }
+        .loading-spinner {
+            display: none;
+        }
+        .form-section {
+            margin-bottom: 2rem;
+        }
+        .stats-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+        }
+        .token-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="bi bi-clipboard-check"></i>
+                        Emergency Networking Training Sign-In Generator
+                    </h1>
+                    <p class="lead">Generate professional PDF training sign-in forms for Monmouth Fire Department</p>
+                    <small class="text-white-50">Secure Cloud Edition - Hosted on Render</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                <!-- API Token Section -->
+                <div class="token-section">
+                    <h5 class="mb-3">
+                        <i class="bi bi-key"></i>
+                        API Authentication
+                    </h5>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-shield-lock"></i>
+                        </span>
+                        <input type="password" 
+                               class="form-control" 
+                               id="api-token" 
+                               placeholder="Enter your Emergency Networking API token">
+                        <button class="btn btn-outline-secondary" type="button" id="toggle-token">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <small class="form-text text-muted mt-2">
+                        <i class="bi bi-info-circle"></i>
+                        Your API token is stored locally in your browser and never sent to any third-party servers.
+                    </small>
+                </div>
+
+                <!-- API Status Card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-cloud-arrow-down"></i>
+                            API Connection Status
+                        </h5>
+                        <div id="api-status">
+                            <span class="status-indicator status-warning"></span>
+                            <span>Enter API token to connect...</span>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Connecting to Emergency Networking API to fetch user data
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Training Information Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-workspace"></i>
+                            Training Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="training-form">
+                            <!-- Training Topic Section -->
+                            <div class="form-section">
+                                <label for="topic" class="form-label fw-bold">
+                                    <i class="bi bi-book"></i>
+                                    Training Topic
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="topic" 
+                                       name="topic"
+                                       placeholder="Enter the training topic (e.g., CPR Certification, Fire Safety)">
+                                <small class="form-text text-muted">
+                                    Leave blank if you want to fill it in by hand on the form
+                                </small>
+                            </div>
+
+                            <!-- Lead Trainer Section -->
+                            <div class="form-section">
+                                <label for="trainer-select" class="form-label fw-bold">
+                                    <i class="bi bi-person-badge"></i>
+                                    Lead Trainer
+                                </label>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <select class="form-select" id="trainer-select" name="trainer-select" disabled>
+                                            <option value="">-- Connect to API first --</option>
+                                        </select>
+                                        <small class="form-text text-muted">Select from Emergency Networking users</small>
+                                    </div>
+                                    <div class="col-md-1 d-flex align-items-center justify-content-center">
+                                        <span class="fw-bold text-muted">OR</span>
+                                    </div>
+                                    <div class="col-md-5 mb-3">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="trainer-custom" 
+                                               name="trainer-custom"
+                                               placeholder="Enter custom trainer name">
+                                        <small class="form-text text-muted">Custom trainer name</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Instructions:</strong> Select a trainer from the dropdown or enter a custom name. 
+                                    Leave both blank if you want to fill it in by hand on the form.
+                                </div>
+                            </div>
+
+                            <!-- Generate Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="generate-btn" disabled>
+                                    <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                    Generate Training Sign-In Form
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Statistics Card -->
+                <div class="card mt-4 stats-card" id="stats-card" style="display: none;">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-bar-chart"></i>
+                            Generation Statistics
+                        </h6>
+                        <div id="stats-content">
+                            <!-- Statistics will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success/Error Messages -->
+                <div id="messages-container" class="mt-4">
+                    <!-- Alert messages will be populated here -->
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="row mt-5">
+            <div class="col-lg-8 offset-lg-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-info-circle"></i>
+                            How It Works
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-key display-4 text-primary mb-2"></i>
+                                <h6>1. Enter Token</h6>
+                                <p class="small text-muted">Provide your Emergency Networking API token</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-cloud-download display-4 text-primary mb-2"></i>
+                                <h6>2. Fetch Data</h6>
+                                <p class="small text-muted">Retrieves active users directly from API</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-ui-checks display-4 text-primary mb-2"></i>
+                                <h6>3. Enter Details</h6>
+                                <p class="small text-muted">Fill in training topic and lead trainer information</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-file-earmark-pdf display-4 text-primary mb-2"></i>
+                                <h6>4. Generate PDF</h6>
+                                <p class="small text-muted">Creates and downloads PDF in your browser</p>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-success mt-3">
+                            <i class="bi bi-check-circle"></i>
+                            <strong>Standalone Version:</strong> This page works entirely in your browser - no server installation required! 
+                            Just save this HTML file and open it locally or host it on any web server.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="bi bi-shield-check"></i>
+                Emergency Networking Training Sign-In Generator v3.0 - Standalone Edition
+            </p>
+            <small class="text-muted">Monmouth Fire Department Training Management System - No Server Required</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application JavaScript -->
+    <script>
+        // Configuration - Set your API token here
+        const EMBEDDED_API_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIyIiwianRpIjoiMmRiNTU1NDk0NjM3Y2JiM2EzNWQwOWZkM2U4MjliNjNmMzRmYmU0YzZiZjVmMDJjNzk2NThhMGIxYzZmNTEyMzdkZDRjZmY1NjVmMmUyMmYiLCJpYXQiOjE3NjA2NDYxMTMuODYwODYsIm5iZiI6MTc2MDY0NjExMy44NjA4NjIsImV4cCI6MjA3NjE3ODkxMy44MzYzODIsInN1YiI6Ijg1MDU2MDM1NyIsInNjb3BlcyI6WyJkaXNwYXRjaC10aWNrZXRzOnJlYWQiLCJ2YW5kZWxheTozOnJlYWQiLCJzY2hlZHVsZTpyZWFkIiwidmFuZGVsYXk6NTpyZWFkIiwidmFuZGVsYXk6NzpyZWFkIiwidmFuZGVsYXk6Nzp3cml0ZSIsInZhbmRlbGF5OjU6d3JpdGUiLCJ2YW5kZWxheTozOndyaXRlIiwic2NoZWR1bGU6d3JpdGUiLCJkaXNwYXRjaC10aWNrZXRzOndyaXRlIiwidXNlcnM6cmVhZCIsImFwcGFyYXR1czp3cml0ZSIsInZhbmRlbGF5OjQ6cmVhZCIsInZhbmRlbGF5OjY6cmVhZCIsInZhbmRlbGF5Ojg6cmVhZCIsInZhbmRlbGF5Ojg6d3JpdGUiLCJ2YW5kZWxheTo2OndyaXRlIiwidmFuZGVsYXk6NDp3cml0ZSIsImFwcGFyYXR1czpyZWFkIiwidXNlcnM6d3JpdGUiXX0.tH2tpj8o41cd5ghK7zC0o2z_FwiihJJN8ngjM2LS_5L51CRRq147IhVNQFvwaOiviIh8UZ6pNlbXCmjJ21bodx1nMrACyaEs7jyA6xyLNabvygCNMTtpP4QufZh6uGFC9rmiNxNtR9eYGARvkbMLQn35GUm2jAMkfImio9-6sI7cdZ3BnpJSETUd3SFl1Xm5wm4DjZjXyz6NLkOw7goqMXrh3Z344Xs8ZcC33aXC3oi58gtPdqO_bYrIKqYAE8Inx_-P-l2rt7QHqV5imYo65rZUs1WHlBBmU25ttIx1afJoGQjNTKr003TCJu63GzlHQIwVEy-7wjVvi0lod4-6qTs7jLt9fov-n2gn0vc31QV0sFCzbmpfy_W_fwvj-1GCrWo7XfJTbgrrJtS_JbR9lFfIVWL8Q40WYkR1lk8-2CxBAKvtJOiK74-HBci7y1jtikVQueFLZOKINM6LnkIAzaHjpYddEx6YpNXcvQ97ev4eCoYWq06PIyytWRzIDq6OS6iuUQQxjuA0hbLqh5XYSqv_O5wm5PojNJ161oWyyUv4zBGRagCHZtyz7SyuzDMUmtSDk1wRXX0bK2HAJ4PuSpBxcm5UxQKfbCYawr_eyibokzTClzWsQWEI_7QjY0iJ7uB1uGP6mCzfUGzvgJh0NWKaouAII6IWRwV0PQK1GUo";
+        
+        let usersData = null;
+        let apiCached = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmbeddedToken();
+            setupFormHandlers();
+            setupTokenHandlers();
+        });
+
+        function loadEmbeddedToken() {
+            // When using proxy, hide token section and test connection immediately
+            document.querySelector('.token-section').style.display = 'none';
+            checkApiStatus();
+        }
+
+        function loadStoredToken() {
+            // Load token from localStorage if available
+            const storedToken = localStorage.getItem('emergency_networking_token');
+            if (storedToken) {
+                document.getElementById('api-token').value = storedToken;
+                checkApiStatus();
+            }
+        }
+
+        function setupTokenHandlers() {
+            const tokenInput = document.getElementById('api-token');
+            const toggleBtn = document.getElementById('toggle-token');
+            
+            // Toggle password visibility
+            toggleBtn.addEventListener('click', function() {
+                const type = tokenInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                tokenInput.setAttribute('type', type);
+                toggleBtn.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+            
+            // Check API when token changes
+            tokenInput.addEventListener('input', function() {
+                const token = tokenInput.value.trim();
+                if (token.length > 10) { // Basic validation
+                    localStorage.setItem('emergency_networking_token', token);
+                    checkApiStatus();
+                } else {
+                    document.getElementById('api-status').innerHTML = 
+                        '<span class="status-indicator status-warning"></span><span>Enter valid API token...</span>';
+                }
+            });
+        }
+
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('api-status');
+            
+            try {
+                statusElement.innerHTML = '<span class="status-indicator status-warning"></span><span>Connecting to API...</span>';
+                
+                // Use local proxy to avoid CORS issues
+                const response = await fetch('/api/users', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    usersData = data;
+                    apiCached = false;
+                    
+                    statusElement.innerHTML = '<span class="status-indicator status-success"></span><span>Connected successfully</span>';
+                    populateTrainerOptions(usersData);
+                    enableForm();
+                    
+                } else {
+                    throw new Error(`API returned status ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                statusElement.innerHTML = '<span class="status-indicator status-error"></span><span>Connection failed</span>';
+                
+                // Check if it's a CORS error
+                if (error.message.includes('fetch') || error.name === 'TypeError') {
+                    showMessage('warning', 
+                        `<strong>CORS Error:</strong> Direct API access blocked by browser security. 
+                        <br><br><strong>Solutions:</strong>
+                        <br>1. Serve this file from a web server (not file://)
+                        <br>2. Use the desktop application instead
+                        <br>3. Contact IT to set up CORS proxy
+                        <br><br><strong>Quick Fix:</strong> Right-click → "Open with" → choose a local web server`
+                    );
+                } else {
+                    showMessage('danger', `API Error: ${error.message}. Please check your token and connection.`);
+                }
+                disableForm();
+            }
+        }
+
+        function populateTrainerOptions(users) {
+            const trainerSelect = document.getElementById('trainer-select');
+            
+            // Filter active users and apply same filtering logic as PDF generation
+            const activeUsers = users.filter(user => user.active === 1);
+            console.log(`Active users: ${activeUsers.length}`);
+            
+            // Filter out users missing both personnel_id AND rank (must have at least one)
+            const validUsers = activeUsers.filter(user => {
+                const personnelId = user.personnel_id;
+                const rank = user.rank;
+                
+                const hasPersonnelId = personnelId && personnelId.toString().trim() !== '';
+                const hasRank = rank && rank.toString().trim() !== '';
+                
+                const isValid = hasPersonnelId || hasRank;
+                
+                // Debug logging for filtered users
+                if (!isValid) {
+                    console.log(`Filtered out: ${user.first_name} ${user.last_name} - ID: "${personnelId}", Rank: "${rank}"`);
+                }
+                
+                return isValid;
+            });
+            
+            console.log(`Valid users for dropdown: ${validUsers.length}`);
+            
+            // Sort valid users
+            const sortedUsers = validUsers.sort((a, b) => {
+                const aName = `${a.last_name || ''} ${a.first_name || ''}`.trim();
+                const bName = `${b.last_name || ''} ${b.first_name || ''}`.trim();
+                return aName.localeCompare(bName);
+            });
+            
+            // Clear existing options
+            trainerSelect.innerHTML = '<option value="">-- Select from active users --</option>';
+            trainerSelect.disabled = false;
+            
+            // Add user options
+            sortedUsers.forEach(user => {
+                const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+                if (name) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    trainerSelect.appendChild(option);
+                }
+            });
+        }
+
+        function enableForm() {
+            document.getElementById('generate-btn').disabled = false;
+            document.getElementById('trainer-select').disabled = false;
+        }
+
+        function disableForm() {
+            document.getElementById('generate-btn').disabled = true;
+            document.getElementById('trainer-select').disabled = true;
+            document.getElementById('trainer-select').innerHTML = '<option value="">-- Connect to API first --</option>';
+        }
+
+        function setupFormHandlers() {
+            const form = document.getElementById('training-form');
+            const generateBtn = document.getElementById('generate-btn');
+            const loadingSpinner = generateBtn.querySelector('.loading-spinner');
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!usersData) {
+                    showMessage('danger', 'No user data available. Please connect to the API first.');
+                    return;
+                }
+                
+                // Disable button and show loading
+                generateBtn.disabled = true;
+                loadingSpinner.style.display = 'inline-block';
+                
+                try {
+                    // Get form data
+                    const topic = document.getElementById('topic').value.trim();
+                    const trainerSelect = document.getElementById('trainer-select').value;
+                    const trainerCustom = document.getElementById('trainer-custom').value.trim();
+                    
+                    // Determine trainer (custom takes precedence)
+                    const trainer = trainerCustom || trainerSelect || '';
+                    
+                    // Generate PDF
+                    await generatePDF(usersData, topic, trainer);
+                    
+                } catch (error) {
+                    showMessage('danger', `Error generating PDF: ${error.message}`);
+                } finally {
+                    // Re-enable button and hide loading
+                    generateBtn.disabled = false;
+                    loadingSpinner.style.display = 'none';
+                }
+            });
+        }
+
+        async function generatePDF(users, topic, trainer) {
+            const { jsPDF } = window.jspdf;
+            
+            // Filter for valid active users (same logic as dropdown)
+            const activeUsers = users.filter(user => user.active === 1);
+            const validUsers = activeUsers.filter(user => {
+                const personnelId = user.personnel_id;
+                const rank = user.rank;
+                const hasPersonnelId = personnelId && personnelId.toString().trim() !== '';
+                const hasRank = rank && rank.toString().trim() !== '';
+                return hasPersonnelId || hasRank;
+            });
+            
+            // Sort users alphabetically
+            const sortedUsers = validUsers.sort((a, b) => {
+                const aName = `${a.last_name || ''} ${a.first_name || ''}`.trim();
+                const bName = `${b.last_name || ''} ${b.first_name || ''}`.trim();
+                return aName.localeCompare(bName);
+            });
+            
+            // Create PDF
+            const pdf = new jsPDF('portrait', 'mm', 'letter');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            // Title
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            const title = 'MONMOUTH FIRE DEPARTMENT TRAINING SIGN IN';
+            const titleWidth = pdf.getTextWidth(title);
+            pdf.text(title, (pageWidth - titleWidth) / 2, 20);
+            
+            // Training information box
+            const boxX = 13;
+            const boxY = 25;
+            const boxWidth = pageWidth - 26;
+            const boxHeight = 15;
+            
+            pdf.setLineWidth(0.5);
+            pdf.rect(boxX, boxY, boxWidth, boxHeight);
+            
+            // Training topic (full width)
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'normal');
+            const topicText = topic ? `Training Topic: ${topic}` : 'Training Topic: _______________________________________________';
+            pdf.text(topicText, boxX + 3, boxY + 5);
+            
+            // Horizontal line
+            pdf.line(boxX, boxY + 7.5, boxX + boxWidth, boxY + 7.5);
+            
+            // Vertical line for date/trainer split
+            const midX = boxX + (boxWidth / 2);
+            pdf.line(midX, boxY + 7.5, midX, boxY + boxHeight);
+            
+            // Date and trainer
+            const currentDate = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            pdf.text(`Date: ${currentDate}`, boxX + 3, boxY + 12);
+            
+            const trainerText = trainer ? `Lead Trainer: ${trainer}` : 'Lead Trainer: _________________________';
+            pdf.text(trainerText, midX + 3, boxY + 12);
+            
+            // Prepare table data
+            const tableData = [];
+            sortedUsers.forEach(user => {
+                const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+                const rank = user.rank || '';
+                tableData.push([fullName, rank, '']); // Empty signature column
+            });
+            
+            // Generate main table
+            pdf.autoTable({
+                head: [['Name', 'Rank', 'Signature']],
+                body: tableData,
+                startY: boxY + boxHeight + 5,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [128, 128, 128],
+                    textColor: 255,
+                    fontSize: 12,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                bodyStyles: { 
+                    fontSize: 12,
+                    cellPadding: 2,
+                    minCellHeight: 7
+                },
+                columnStyles: {
+                    0: { cellWidth: 52, halign: 'left' },   // Name (reduced by 5mm)
+                    1: { cellWidth: 48, halign: 'center' }, // Rank (increased by 10mm for "Supporting Member")
+                    2: { cellWidth: 86, halign: 'center' }  // Signature (reduced by 5mm)
+                },
+                alternateRowStyles: { fillColor: [240, 240, 240] },
+                didDrawPage: function(data) {
+                    // Page numbers
+                    pdf.setFontSize(9);
+                    pdf.setFont(undefined, 'normal');
+                    const pageText = `${data.pageNumber} / ${pdf.internal.getNumberOfPages()}`;
+                    const pageTextWidth = pdf.getTextWidth(pageText);
+                    pdf.text(pageText, (pageWidth - pageTextWidth) / 2, pageHeight - 13);
+                }
+            });
+            
+            // Additional attendees section
+            const finalY = pdf.lastAutoTable.finalY + 10;
+            pdf.setFontSize(12);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Additional Attendees', 13, finalY);
+            
+            // Additional attendees table
+            const additionalData = Array(8).fill(['', '']); // 8 blank rows
+            
+            pdf.autoTable({
+                head: [['Name', 'Signature']],
+                body: additionalData,
+                startY: finalY + 3,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [128, 128, 128],
+                    textColor: 255,
+                    fontSize: 12,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                bodyStyles: { 
+                    fontSize: 12,
+                    cellPadding: 2,
+                    minCellHeight: 7
+                },
+                columnStyles: {
+                    0: { cellWidth: 95, halign: 'left' },   // Name
+                    1: { cellWidth: 91, halign: 'center' }  // Signature
+                }
+            });
+            
+            // Show statistics
+            showStats({
+                total_users: users.length,
+                active_users: activeUsers.length,
+                valid_users: validUsers.length,
+                filtered_out: activeUsers.length - validUsers.length
+            });
+            
+            // Download PDF
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            const filename = `training_signin_${timestamp}.pdf`;
+            pdf.save(filename);
+            
+            showMessage('success', `Training sign-in form generated successfully! Including ${validUsers.length} valid users.`);
+        }
+
+        function showMessage(type, message) {
+            const container = document.getElementById('messages-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            container.appendChild(alert);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 10000);
+        }
+
+        function showStats(stats) {
+            const statsCard = document.getElementById('stats-card');
+            const statsContent = document.getElementById('stats-content');
+            
+            statsContent.innerHTML = `
+                <div class="row text-center">
+                    <div class="col-3">
+                        <div class="fw-bold fs-4 text-primary">${stats.total_users}</div>
+                        <small class="text-muted">Total Users</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="fw-bold fs-4 text-success">${stats.active_users}</div>
+                        <small class="text-muted">Active Users</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="fw-bold fs-4 text-info">${stats.valid_users}</div>
+                        <small class="text-muted">Included</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="fw-bold fs-4 text-warning">${stats.filtered_out}</div>
+                        <small class="text-muted">Filtered Out</small>
+                    </div>
+                </div>
+            `;
+            
+            statsCard.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
