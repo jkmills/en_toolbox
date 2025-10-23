@@ -622,12 +622,19 @@
                 filtered_out: activeUsers.length - validUsers.length
             });
             
-            // Download PDF
+            // Open PDF in browser instead of downloading
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
             const filename = `training_signin_${timestamp}.pdf`;
-            pdf.save(filename);
             
-            showMessage('success', `Training sign-in form generated successfully! Including ${validUsers.length} valid users.`);
+            // Create blob URL and open in new tab
+            const pdfBlob = pdf.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            window.open(pdfUrl, '_blank');
+            
+            // Clean up the blob URL after a delay
+            setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+            
+            showMessage('success', `Training sign-in form generated successfully! Including ${validUsers.length} valid users. PDF opened in new tab.`);
         }
 
         function showMessage(type, message) {
